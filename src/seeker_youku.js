@@ -16,9 +16,31 @@ function urlParameter (query) {
     return search.join("&")
 }
 
-exports.match = function (url) {
-  return /v\.youku\.com/.test(url.attr('host')) && !!window.videoId
+function parseVedioId (url) {
+	if (!/v\.youku\.com/.test(url.attr('host')))
+		return "";
+	if (!/v_show\/id_/.test(url.attr('path')))
+		return "";
+
+	//http://v.youku.com/v_show/id_XMjY3MjQwMDUwOA==...
+	//http://v.youku.com/v_show/id_XMTM4ODY0NTMy.html
+	//return XMjY3MjQwMDUwOA
+	return url.attr('path').match(/v_show\/id_(.*?)[==|.]/)[1];
 }
+
+exports.match = function (url) {
+	id = parseVedioId(url);
+	if (id == "") {
+		log("parse url failed");
+		return false;
+	}
+	window.videoId = id;
+
+	log("path: " + url.attr('path'))
+	log("id: " + id)
+	return id;
+}
+
 exports.parseYoukuCode = function (videoId, callback) {
   ajax({
     url: 'http://play.youku.com/play/get.json?vid=' + videoId + '&ct=12', jsonp: true,
